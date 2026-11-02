@@ -1,4 +1,5 @@
-import { FormEvent, useEffect, useMemo, useState } from 'react'
+import { FormEvent, useEffect, useMemo, useRef, useState } from 'react'
+import type { Session } from '@supabase/supabase-js'
 import { supabase } from './lib/supabase'
 import DocsPage from './docs/DocsPage'
 import PlayerHub from './PlayerHub'
@@ -72,32 +73,101 @@ function BrandMark({ compact = false }: { compact?: boolean }) {
 
 function Nav() {
   const [open, setOpen] = useState(false)
+  const [accountOpen, setAccountOpen] = useState(false)
+  const [session, setSession] = useState<Session | null>(null)
+  const [checking, setChecking] = useState(true)
+  const [busy, setBusy] = useState(false)
+  const [notice, setNotice] = useState('')
+  const accountButton = useRef<HTMLButtonElement>(null)
+  const signingOut = useRef(false)
+  const mounted = useRef(false)
+
+  useEffect(() => {
+    mounted.current = true
+    const client = supabase
+    if (!client) { setChecking(false); return () => { mounted.current = false } }
+    let active = true
+    let changed = false
+    const { data } = client.auth.onAuthStateChange((_event, nextSession) => {
+      if (!active) return
+      changed = true
+      setSession(nextSession)
+      setChecking(false)
+      setAccountOpen(false)
+    })
+    void client.auth.getSession().then(({ data: initial, error }) => {
+      if (!active || changed) return
+      setSession(error ? null : initial.session)
+      setChecking(false)
+      if (error) setNotice('No se pudo comprobar la sesión. Puedes iniciar sesión nuevamente.')
+    }).catch(() => {
+      if (!active || changed) return
+      setChecking(false)
+      setNotice('No se pudo comprobar la sesión. Puedes iniciar sesión nuevamente.')
+    })
+    return () => { active = false; mounted.current = false; data.subscription.unsubscribe() }
+  }, [])
+
+  function closeNavigation() { setOpen(false); setAccountOpen(false) }
+
+  async function signOut() {
+    if (!supabase || signingOut.current) return
+    signingOut.current = true
+    setBusy(true)
+    setNotice('')
+    try {
+      // Cerrar únicamente esta sesión web; conservar las sesiones del videojuego.
+      const { error } = await supabase.auth.signOut({ scope: 'local' })
+      if (error) throw error
+      if (mounted.current) { setSession(null); closeNavigation(); setNotice('Sesión cerrada.') }
+    } catch {
+      if (mounted.current) setNotice('No se pudo cerrar sesión. Inténtalo nuevamente.')
+    } finally {
+      signingOut.current = false
+      if (mounted.current) setBusy(false)
+    }
+  }
+
   const links = [
     ['El juego', '#juego'],
     ['Cómo se juega', '#como-jugar'],
     ['Misiones', '#misiones'],
     ['Documentación', '/docs'],
-    ['Mi progreso', '/perfil'],
     ['Equipo', '#equipo'],
   ]
   return (
     <header className="spido-nav">
       <div className="spido-container spido-nav-row">
-        <a href="#inicio" aria-label="SPIDOCODE — Inicio" onClick={() => setOpen(false)}><BrandMark compact /></a>
-        <button className="spido-menu-toggle" type="button" aria-expanded={open} aria-controls="landing-navigation" onClick={() => setOpen(!open)}>
+        <a href="#inicio" aria-label="SPIDOCODE — Inicio" onClick={closeNavigation}><BrandMark compact /></a>
+        <button className="spido-menu-toggle" type="button" aria-expanded={open} aria-controls="landing-navigation" onClick={() => { setOpen(!open); setAccountOpen(false) }}>
           {open ? 'Cerrar menú −' : 'Menú +'}
         </button>
-        <nav id="landing-navigation" aria-label="Navegación principal" className={cn('spido-nav-links', open && 'is-open')}
+        <div id="landing-navigation" className={cn('spido-nav-content', open && 'is-open')}
           onKeyDown={(event) => {
             if (event.key === 'Escape') {
-              setOpen(false)
-              document.querySelector<HTMLButtonElement>('.spido-menu-toggle')?.focus()
+              if (accountOpen) { setAccountOpen(false); accountButton.current?.focus() }
+              else { setOpen(false); document.querySelector<HTMLButtonElement>('.spido-menu-toggle')?.focus() }
             }
           }}>
-          {links.map(([label, href]) => <a key={href} href={href} onClick={() => setOpen(false)}>{label}</a>)}
-        </nav>
-        <span className="spido-nav-status"><span aria-hidden="true">●</span> En desarrollo</span>
+          <nav aria-label="Navegación principal" className="spido-nav-links">
+            {links.filter(([, href]) => !session || href !== '/docs').map(([label, href]) => <a key={href} href={href} onClick={closeNavigation}>{label}</a>)}
+            <span className="spido-nav-status"><span aria-hidden="true">●</span> En desarrollo</span>
+          </nav>
+          <div className="spido-nav-account" onBlur={(event) => {
+            if (!event.currentTarget.contains(event.relatedTarget)) setAccountOpen(false)
+          }}>
+            {checking ? <span role="status">Comprobando sesión…</span> : session ? <>
+              <button ref={accountButton} type="button" aria-expanded={accountOpen} aria-controls="landing-account-links" onClick={() => setAccountOpen(!accountOpen)}>Mi perfil <span aria-hidden="true">▼</span></button>
+              <div id="landing-account-links" className="spido-account-links" hidden={!accountOpen}>
+                <a href="/perfil" onClick={closeNavigation}>Mi progreso</a>
+                <a href="/docs" onClick={closeNavigation}>Códice A.D.A.</a>
+                <button type="button" disabled={busy} onClick={() => void signOut()}>{busy ? 'Cerrando sesión…' : 'Cerrar sesión'}</button>
+              </div>
+            </> : <><a className="spido-account-login" href="/login" onClick={closeNavigation}>Iniciar sesión</a><a className="spido-account-cta" href="/registro" onClick={closeNavigation}>Comenzar ahora</a></>}
+          </div>
+        </div>
       </div>
+      <p className="spido-nav-notice" role="status">{notice}</p>
     </header>
   )
 }
@@ -156,6 +226,7 @@ function Hero() {
           <a href="/docs" className="spido-button spido-button-docs" aria-label="Abrir Archivo A.D.A., centro de documentación de SpidoCode">📚 Ver documentación <span aria-hidden="true">↗</span></a>
         </div>
             <p className="spido-game-availability" role="note">El juego está en desarrollo. El enlace al proyecto muestra su código y avances; todavía no es una descarga ni una versión jugable.</p>
+            <p className="spido-game-availability">Descarga del juego: próximamente</p>
             <div className="spido-hero-companion"><span>SPID / TU COMPAÑERO</span><p>Un pequeño robot con aspecto de computador y patas. Una gran aventura por descubrir.</p></div>
           </div>
         <figure className="spido-capture">
