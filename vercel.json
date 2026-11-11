@@ -10,6 +10,7 @@
     },
     {
       "source": "/perfil",
+      "source": "/jugar",
       "destination": "/index.html"
     },
     {
