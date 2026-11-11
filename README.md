@@ -1,4 +1,4 @@
-# Edu_Code Web
+# SpidoCode Web
 
 Web oficial/prototipo de **Edu_Code**, adaptada a la identidad visual espacial del proyecto y a su estado real de desarrollo.
 
