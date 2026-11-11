@@ -160,6 +160,26 @@ button:disabled { cursor: wait; opacity: .72; }
 .spido-nav-links { display:flex; gap:22px; align-items:center; }
 .spido-nav-links a { font-size:13px; color:#bac7d8; text-decoration:none; padding-block:14px; }
 .spido-nav-links a:hover { color:var(--spido-green); }
+.spido-nav-content { display:contents; }
+.spido-nav-account { position:relative; display:flex; align-items:center; justify-self:end; gap:12px; font-size:13px; color:#bac7d8; }
+.spido-nav-account > a { display:inline-flex; align-items:center; justify-content:center; min-height:44px; padding:10px 14px; border:1px solid transparent; border-radius:3px; text-decoration:none; white-space:nowrap; }
+.spido-account-login { color:#bac7d8; }
+.spido-account-login:hover { color:var(--spido-green); }
+.spido-account-cta { color:#0c1d15; background:var(--spido-green); border-color:var(--spido-green); font-weight:600; }
+.spido-account-cta:hover { background:#d4ffb1; }
+.spido-nav-account button { min-height:44px; padding:10px 12px; border:1px solid #3d5268; border-radius:3px; color:#e4efef; background:#07111f; font:inherit; cursor:pointer; }
+.spido-nav-account button:hover { border-color:var(--spido-green); }
+.spido-nav-account button:disabled { opacity:.65; cursor:wait; }
+.spido-nav a:focus-visible, .spido-nav button:focus-visible { outline:2px solid var(--spido-cyan); outline-offset:4px; }
+.spido-account-links { position:absolute; top:100%; right:0; min-width:190px; padding:8px; border:1px solid #3d5268; border-radius:3px; background:#07111f; box-shadow:0 12px 24px #0006; }
+.spido-account-links:not([hidden]) { display:flex; flex-direction:column; gap:4px; }
+.spido-account-links a { padding:12px; color:#bac7d8; text-decoration:none; }
+.spido-account-links a:hover { color:var(--spido-green); }
+.spido-account-links button { text-align:left; }
+.spido-nav-notice { margin:0; padding:0 20px 12px; color:var(--spido-cyan); font-size:13px; }
+.spido-nav-notice:empty { display:none; }
+@media (min-width:901px) { .spido-nav-row { display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:20px; padding-block:12px; } .spido-nav-links { justify-content:center; gap:14px; flex-wrap:wrap; min-width:0; } }
+@media (max-width:900px) { .spido-nav-content { display:none; width:100%; min-width:0; } .spido-nav-content.is-open { display:flex; flex-direction:column; padding-bottom:20px; } .spido-nav-content .spido-nav-links { display:flex; flex-direction:column; align-items:stretch; padding-bottom:12px; } .spido-nav-account { align-items:stretch; flex-direction:column; gap:8px; border-top:1px solid #233047; padding-top:16px; } .spido-account-links { position:static; min-width:0; margin-top:4px; } }
 .spido-nav-status { display:flex; align-items:center; gap:8px; font:11px 'JetBrains Mono',monospace; white-space:nowrap; color:#bac7d8; }
 .spido-nav-status span { color:var(--spido-green); font-size:9px; }
 .spido-menu-toggle { display:none; }
