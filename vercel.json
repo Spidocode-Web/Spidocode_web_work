@@ -9,6 +9,7 @@
       "destination": "/index.html"
     },
     {
+      "source": "/perfil",
       "source": "/jugar",
       "destination": "/index.html"
     },

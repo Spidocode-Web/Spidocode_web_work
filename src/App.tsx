@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react'
 import { supabase } from './lib/supabase'
 import DocsPage from './docs/DocsPage'
+import PlayerHub from './PlayerHub'
 import GameAccessPage from './GameAccessPage'
 
 const brand = {
@@ -76,6 +77,7 @@ function Nav() {
     ['Cómo se juega', '#como-jugar'],
     ['Misiones', '#misiones'],
     ['Documentación', '/docs'],
+    ['Mi progreso', '/perfil'],
     ['Equipo', '#equipo'],
   ]
   return (
@@ -1464,6 +1466,7 @@ export default function App() {
   const pathname = window.location.pathname.replace(/\/+$/, '') || '/'
   if (pathname === '/reset-password') return <ResetPasswordPage />
   if (pathname === '/docs') return <DocsPage />
+  if (pathname === '/perfil') return <PlayerHub />
   if (pathname === '/jugar') return <GameAccessPage />
   return <LandingPage />
 }
